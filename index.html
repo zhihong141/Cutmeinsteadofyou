@@ -75,29 +75,41 @@
 
   <style>
     html {
-  /* Make the root element fill the device viewport */
-  width: 100vw;
-  height: 100dvh; /* dynamic viewport: better for mobile browser UI */
-}
+      /* Root fills viewport */
+      width: 100vw;
+      height: 100dvh;
+    }
 
-body {
-  margin: 0;
-  padding: 0;
+    /* Treat the whole app as a "phone canvas" */
+    body {
+      margin: 0;
+      padding: 0;
 
-  /* Hard-clamp the app to the visible phone screen */
-  width: 100vw;
-  height: 100dvh;
-  max-width: 100vw;
-  max-height: 100dvh;
+      /* Phone-style frame:
+         - max width ~430px (modern phone)
+         - max height ~932px (tall phone)
+         - but never exceed actual device viewport
+      */
+      width: min(100vw, 430px);
+      height: min(100dvh, 932px);
+      max-width: 100vw;
+      max-height: 100dvh;
 
-  overflow: hidden; /* no scrolling / no extra space */
+      /* Center the phone canvas on larger screens */
+      margin-left: auto;
+      margin-right: auto;
 
-  font-family: "Inter", sans-serif;
-  transition: background-color 0.3s ease-out;
+      overflow: hidden; /* no page scroll */
 
-  /* Prevents iOS/Android pull-to-refresh on scroll */
-  overscroll-behavior-y: contain;
-}
+      font-family: "Inter", sans-serif;
+      transition: background-color 0.3s ease-out;
+
+      /* Prevents iOS/Android pull-to-refresh on scroll */
+      overscroll-behavior-y: contain;
+
+      /* So all your fixed / absolute elements are relative to this "phone" */
+      position: relative;
+    }
     .canvas-container {
       position: absolute;
       top: 0;
@@ -389,7 +401,7 @@ body {
 
             <!-- 100% ML Overload Modal (Uses w-full mobile-first sizing) -->
             <div id="overloadModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[130] hidden">
-                <div class="bg-red-900 text-white p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-red-500 w-11/12 max-w-sm space-y-4">
+                <div class="bg-red-900 text-white p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-red-500 w-11/12 max-w-sm space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-red-300 mb-2 border-b-2 border-red-700 pb-2" data-lang="overloadTitle">
                         Mental Overload!
                     </h2>
@@ -421,7 +433,7 @@ body {
 
             <!-- Quick-Log Trigger Modal (Tapping the ML Meter opens this) -->
             <div id="quickLogModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[125] hidden">
-                <div class="bg-gray-800 text-white p-6 rounded-xl shadow-2xl border-4 border-gray-600 w-11/12 max-w-sm space-y-4">
+                <div class="bg-gray-800 text-white p-6 rounded-xl shadow-2xl border-4 border-gray-600 w-11/12 max-w-sm space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-blue-300 border-b-2 border-gray-700 pb-2" data-lang="quickLogTitle">
                         Quick Check-in
                     </h2>
@@ -484,7 +496,7 @@ body {
 
             <!-- New: Positive Action Log Modal -->
             <div id="positiveActionModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[120] hidden">
-                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-green-400 w-11/12 max-w-md space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-green-400 w-11/12 max-w-md space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-green-700 border-b border-green-300 pb-2" data-lang="positiveActionTitle">Log Positive Action</h2>
                     <p class="text-gray-600 text-base" data-lang="positiveActionDesc">Record an action you took that was positive, helpful, or neutral. This supports healthy habit building.</p>
                     <textarea id="positiveActionInput" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 text-gray-900 text-base" placeholder-key="positiveActionPlaceholder"></textarea>
@@ -502,7 +514,7 @@ body {
         <!-- Post-Relief Grounding / Check-Out Modal -->
         <div id="groundingModal"
              class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-[150] hidden">
-          <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-indigo-400 w-11/12 max-w-md space-y-4">
+          <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-indigo-400 w-11/12 max-w-md space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h2 class="text-2xl font-extrabold text-indigo-800 border-b-2 border-gray-200 pb-2"
                 data-lang="groundingTitle">
               Grounding Check-Out
@@ -513,7 +525,7 @@ body {
             </p>
 
             <!-- Guided 5-4-3-2-1 grounding prompt -->
-            <div class="bg-indigo-50 rounded-lg p-3 space-y-1 text-sm text-gray-800">
+            <div class="bg-indigo-50 rounded-lg p-3 space-y-1 text-sm text-gray-800 max-h-[calc(100dvh-2rem)] overflow-y-auto">
               <p data-lang="grounding5"><span class="font-semibold">5</span> things you can see.</p>
               <p data-lang="grounding4"><span class="font-semibold">4</span> things you can touch.</p>
               <p data-lang="grounding3"><span class="font-semibold">3</span> things you can hear.</p>
@@ -553,7 +565,7 @@ body {
 
             <!-- Welcome / Content Warning Modal - ADJUSTED FOR SIZE -->
             <div id="welcomeModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[125] hidden">
-                <div class="bg-yellow-200 p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-yellow-500 w-11/12 max-w-lg transform">
+                <div class="bg-yellow-200 p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-yellow-500 w-11/12 max-w-lg transform max-h-[calc(100dvh-2rem)] overflow-y-auto ">
                     <h2 class="text-xl font-extrabold text-gray-900 mb-4 border-b border-yellow-400 pb-2" data-lang="welcomeTitle">
                         Welcome - Please Read
                     </h2>
@@ -568,7 +580,7 @@ body {
                         <strong data-lang="welcomeGoal">Your Goal:</strong>
                         <span data-lang="welcomeGoalText">Your goal is not to fill the screen, but to use the 'Breathe' and 'Challenge' tools to manage your 'Mental Load' (the meter at the bottom left). This is a tool for practicing relief.</span>
                     </p>
-                    <div class="space-y-2 mb-6 text-center bg-yellow-100 p-4 rounded-lg border border-yellow-300">
+                    <div class="space-y-2 mb-6 text-center bg-yellow-100 p-4 rounded-lg border border-yellow-300 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <p class="text-base font-bold text-gray-900" data-lang="welcomeCrisisTitle">Immediate Crisis Support:</p>
                         <a href="https://www.iasp.info/crisis-centres/" target="_blank"
                            class="block text-lg font-extrabold text-red-600 hover:text-red-800 transition duration-150 underline decoration-2" data-lang="welcomeCrisisLink">
@@ -607,7 +619,7 @@ body {
 
             <!-- Cut & Heal Guide Modal -->
     <div id="guideModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden">
-      <div class="mx-auto mt-10 w-11/12 max-w-xl rounded-2xl bg-white dark:bg-gray-900 dark:text-white shadow-2xl border-2 border-gray-200 dark:border-gray-700">
+      <div class="mx-auto mt-10 w-11/12 max-w-xl rounded-2xl bg-white dark:bg-gray-900 dark:text-white shadow-2xl border-2 border-gray-200 dark:border-gray-700 max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 class="text-xl font-extrabold" data-lang="guideTitle">Guide: Cut &amp; Heal Modes</h2>
           <button id="closeGuideModal" class="px-3 py-1 rounded-lg bg-gray-800 text-white text-xs" data-lang="close">Close</button>
@@ -665,7 +677,7 @@ body {
 
             <!-- Overload Check in -->
         <div id="microCheckModal" class="fixed inset-0 bg-red-900/95 backdrop-blur-sm flex items-center justify-center z-[140] hidden">
-            <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-red-600 w-11/12 max-w-md space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-red-600 w-11/12 max-w-md space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                 <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-4">
                     <h3 class="text-lg font-bold text-red-800">Mental Load Alert</h3>
                     <p class="text-red-700 mt-1">Your Mental Load has reached 60%. Take a moment to pause.</p>
@@ -719,14 +731,14 @@ body {
             </div>
             <!-- Sensory Challenge Modal -->
             <div id="sensoryChallengeModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[110] hidden">
-                <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-indigo-500 w-11/12 max-w-sm space-y-4">
+                <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-2xl transition duration-300 border-4 border-indigo-500 w-11/12 max-w-sm space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-indigo-400 mb-2 border-b-2 border-indigo-700 pb-2" data-lang="challengeTitle">
                         CRISIS: Sensory Challenge!
                     </h2>
                     <p class="text-indigo-200 font-medium text-lg" data-lang="challengeDesc">
                         Override the urge by using an intense coping skill.
                     </p>
-                    <div class="bg-indigo-800 p-4 rounded-lg border-2 border-indigo-500">
+                    <div class="bg-indigo-800 p-4 rounded-lg border-2 border-indigo-500 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <p class="text-xl font-bold text-indigo-300 mb-2" data-lang="challengeTaskTitle">Your Task:</p>
                         <p id="challengeTask" class="text-2xl font-extrabold text-white italic">
                             <!-- Task injected by JavaScript -->
@@ -761,7 +773,7 @@ body {
                 <!-- Challenge Prepare Modal (30s countdown before challenge starts) -->
                 <div id="challengePrepModal"
                      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[145] hidden opacity-0 transition-opacity duration-500">
-                    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-11/12 text-center space-y-4">
+                    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-11/12 text-center space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <h2 class="text-2xl font-bold text-gray-900" data-lang="challengePrepTitle">
                             Get Ready
                         </h2>
@@ -793,7 +805,7 @@ body {
 
                 <!-- ML History Log Modal - OPTIMIZED FOR MOBILE -->
             <div id="logModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[115] hidden">
-                <div class="bg-white p-4 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-sm space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-sm space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <div class="flex flex-col justify-between items-start border-b-2 border-gray-300 pb-2 space-y-2">
                         <h2 class="text-xl font-extrabold text-gray-900" data-lang="logTitle">
                             Activity Log
@@ -812,7 +824,7 @@ body {
                     <div id="logSummary" class="bg-gray-100 p-3 rounded-lg border border-gray-200 text-sm shadow-inner">
                         <!-- Summary injected by JavaScript -->
                     </div>
-                    <div class="max-h-40 overflow-y-auto border border-gray-300 rounded-lg shadow-md">
+                    <div class="max-h-40 overflow-y-auto border border-gray-300 rounded-lg shadow-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <table class="w-full text-left text-xs">
                             <thead>
                                 <tr class="text-gray-600 uppercase tracking-wider sticky top-0 bg-gray-50 border-b border-gray-300">
@@ -854,7 +866,7 @@ body {
 
             <!-- Email Selection Modal (New Element) -->
             <div id="emailSelectModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[120] hidden">
-                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-blue-400 w-11/12 max-w-md space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-blue-400 w-11/12 max-w-md space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-gray-900 border-b-2 border-gray-300 pb-3" data-lang="emailTitle">
                         Select Email Client
                     </h2>
@@ -882,7 +894,7 @@ body {
 
             <!-- Add Note Modal -->
             <div id="addNoteModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[120] hidden">
-                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-md space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-md space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-gray-900 border-b border-gray-300 pb-2" data-lang="noteTitle">Add Journal Note</h2>
                     <p class="text-gray-600 text-base" data-lang="noteDesc">Add a note about what you're feeling or what triggered this moment. It will be saved in your log.</p>
                     <textarea id="noteInput" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900 text-base" placeholder-key="notePlaceholder"></textarea>
@@ -929,10 +941,16 @@ body {
                     </div>
                 </div>
             </div>
-
+<!-- One-time "Heal Metaphor" Notification -->
+            <div id="healNotification" class="fixed bottom-24 right-6 bg-green-600 text-white p-4 rounded-xl shadow-2xl border-4 border-green-400 w-11/12 max-w-sm z-[100] hidden transition-all duration-300 transform translate-x-full">
+                <h3 class="font-bold text-lg" data-lang="healNotifyTitle">Cut Healed!</h3>
+                <p class="text-sm" data-lang="healNotifyDesc">
+                    Notice the 'Mental Load' didn't change? That's intentional. Healing is the first step. Now, use 'Breathe' or 'Challenge' to relieve the underlying tension.
+                </p>
+            </div>
             <!-- Affirmations Modal -->
             <div id="affirmationsModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[115] hidden">
-                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-lg space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-lg space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-gray-900 border-b-2 border-gray-300 pb-3" data-lang="affirmTitle">
                         Personalized Affirmations
                     </h2>
@@ -949,7 +967,7 @@ body {
                     </div>
 
                     <!-- Prioritize Checkbox -->
-                    <div class="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg border border-gray-200">
+                    <div class="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg border border-gray-200 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <input type="checkbox" id="prioritizeAffirmations" class="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
                         <label for="prioritizeAffirmations" class="font-medium text-gray-700 text-base" data-lang="affirmPrioritize">
                             Prioritize my affirmations during high tension moments
@@ -957,7 +975,7 @@ body {
                     </div>
 
                     <!-- Saved Affirmations List -->
-                    <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-md p-2 space-y-2 bg-gray-50">
+                    <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-md p-2 space-y-2 bg-gray-50 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <ul id="affirmationsList" class="divide-y divide-gray-200">
                             <!-- Affirmations will be injected here -->
                         </ul>
@@ -976,7 +994,7 @@ body {
 
             <!-- Settings Modal -->
             <div id="settingsModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-[115] hidden">
-                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-md space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-gray-400 w-11/12 max-w-md space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto max-h-[calc(100dvh-2rem)] overflow-y-auto">
                     <h2 class="text-2xl font-extrabold text-gray-900 border-b-2 border-gray-300 pb-3" data-lang="settingsTitle">
                         Settings
                     </h2>
@@ -992,7 +1010,7 @@ body {
                         </select>
                     </div>
                     <!-- Visual Settings -->
-                    <div class="space-y-4 pt-4 border-t border-gray-200">
+                    <div class="space-y-4 pt-4 border-t border-gray-200 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <h3 class="text-xl font-bold text-gray-800" data-lang="settingsVisual">Visual Settings</h3>
                         <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg border border-gray-200">
                             <label for="toggleDrips" class="font-medium text-gray-700 text-base" data-lang="settingsDrips">
@@ -1009,7 +1027,7 @@ body {
                     </div>
 
                     <!-- Haptic Settings -->
-                    <div class="space-y-4 pt-4 border-t border-gray-200">
+                    <div class="space-y-4 pt-4 border-t border-gray-200 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <h3 class="text-xl font-bold text-gray-800" data-lang="settingsHaptic">Haptic Feedback</h3>
                         <label for="hapticIntensitySlider" class="font-medium text-gray-700 text-base block" data-lang="hapticIntensity">
                             Intensity: <span id="hapticIntensityValue">50%</span>
@@ -1019,7 +1037,7 @@ body {
                         <p class="text-sm text-gray-500 italic" data-lang="hapticNote">Set to 0% to disable all vibrations.</p>
                     </div>
                     <!-- Challenge Prep Time Settings -->
-                    <div class="space-y-3 pt-4 border-t border-gray-200">
+                    <div class="space-y-3 pt-4 border-t border-gray-200 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                       <h3 class="text-xl font-bold text-gray-800" data-lang="settingsChallengePrepTitle">
                         Challenge Prep Time
                       </h3>
@@ -1043,15 +1061,6 @@ body {
                         Close
                     </button>
                 </div>
-
-
-            <!-- One-time "Heal Metaphor" Notification -->
-            <div id="healNotification" class="fixed bottom-24 right-6 bg-green-600 text-white p-4 rounded-xl shadow-2xl border-4 border-green-400 w-11/12 max-w-sm z-[100] hidden transition-all duration-300 transform translate-x-full">
-                <h3 class="font-bold text-lg" data-lang="healNotifyTitle">Cut Healed!</h3>
-                <p class="text-sm" data-lang="healNotifyDesc">
-                    Notice the 'Mental Load' didn't change? That's intentional. Healing is the first step. Now, use 'Breathe' or 'Challenge' to relieve the underlying tension.
-                </p>
-            </div>
 
             <!-- Notification Box for "Copied" -->
             <div id="notificationBox" class="fixed bottom-24 right-6 bg-blue-600 text-white py-3 px-5 rounded-xl shadow-2xl z-[100] hidden transition-all duration-300 transform translate-x-full">
@@ -1106,7 +1115,8 @@ body {
                 let strokeIdCounter = 0;
                 let isHealMode = false;
                 let strokesSinceLastPrompt = 0;
-                let healStrokeCountThisSession = 0; // NEW: count heal strokes per session
+                let healStrokeCountThisSession = 0;      // NEW: count heal strokes this session
+                let healPromptShownThisSession = false;  // NEW: only show heal message once per session
                 let isReliefActive = false;
                 let reliefMLDrained = 0;
                 let isChallengeActive = false;
@@ -2541,8 +2551,9 @@ function updateLanguage(lang) {
                     // Apply all settings from appState
                     isHealMode = false; // Always reset mode on load
                     strokesSinceLastPrompt = 0;
-                    healStrokeCountThisSession = 0; // NEW: reset per session
-                    appState.hasHealedOnce = false; // NEW: allow the heal message once every session
+                    healStrokeCountThisSession = 0;      // NEW: reset counter
+                    healPromptShownThisSession = false;  // NEW: allow message again
+                    appState.hasHealedOnce = false;      // NEW: also reset persistent flag
 
                     // Restore settings
                     languageSelector.value = appState.settings.language;
@@ -3859,10 +3870,11 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
                         // --- HEAL MODE LOGIC ---
                         playSound('heal');
                         // NEW: count heal strokes and show message after 2 strokes (anywhere)
-                        healStrokeCountThisSession += 1;
-                        if (!appState.hasHealedOnce && healStrokeCountThisSession >= 4) {
+                        healStrokeCountThisSession++;
+                        if (!healPromptShownThisSession && healStrokeCountThisSession >= 2) {
                             showNotification('heal', 7000);
-                            appState.hasHealedOnce = true;
+                            healPromptShownThisSession = true;
+                            appState.hasHealedOnce = true; // keep appState in sync with what we show
                         }
                         const newHeal = {
                             id: strokeIdCounter,
@@ -3899,12 +3911,6 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
                                     }
                                     appState.cuts.splice(i, 1);
                                     activeDrips = activeDrips.filter(drip => drip.cutId !== cut.id);
-
-                                    // Show "Heal Metaphor" notification
-                                    if (!appState.hasHealedOnce) {
-                                        showNotification('heal', 7000);
-                                        appState.hasHealedOnce = true;
-                                    }
                                 }
                             }
                         }
@@ -4210,10 +4216,10 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
                 undoButton.addEventListener('click', undoLastCut);
                 themeToggleButton.addEventListener('click', toggleTheme);
                 modeToggleButton.addEventListener('click', () => {
-                    if (isChallengeActive) return;
-                    isHealMode = !isHealMode;
-                    updateModeButton();
-                });
+                if (isChallengeActive) return;
+                isHealMode = !isHealMode;
+                updateModeButton();
+            });
                 // --- Relief Listeners ---
                 breathButton.addEventListener('mousedown', startRelief);
                 breathButton.addEventListener('mouseup', endRelief);
