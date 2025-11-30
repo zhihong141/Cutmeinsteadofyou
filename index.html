@@ -3542,69 +3542,80 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
             }
 
                 function startFocusChallenge() {
-                if (focusTarget) return; // Already running
+    if (focusTarget) return; // Already running
+    focusTarget = document.createElement('div');
+    focusTarget.id = 'focusTarget';
+    document.body.appendChild(focusTarget);
 
-                // Use the challenge modal as the playground, fallback to body
-                const container = document.getElementById('sensoryChallengeModal') || document.body;
+    focusTimeElapsed = 0;
 
-                focusTarget = document.createElement('div');
-                focusTarget.id = 'focusTarget';
-                container.appendChild(focusTarget);
+    const targetSize = 80;      // match #focusTarget width/height in CSS
+    const sideMargin = 40;      // space from left/right edges
 
-                focusTimeElapsed = 0;
+    // Vertical band ratios: 0 = very top, 1 = very bottom
+    const SAFE_TOP_RATIO = 0.20;   // start 20% down from top
+    const SAFE_BOTTOM_RATIO = 0.80; // end at 80% of screen height
 
-                const moveTarget = () => {
-                    if (!focusTarget) return;
+    function getRandomPosition() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-                    const bounds = container.getBoundingClientRect();
-                    const targetSize = 80; // matches #focusTarget width/height in CSS
+        // Horizontal clamp
+        const maxX = Math.max(0, viewportWidth - 2 * sideMargin - targetSize);
+        const x = sideMargin + Math.random() * maxX;
 
-                    const maxX = Math.max(0, bounds.width - targetSize);
-                    const maxY = Math.max(0, bounds.height - targetSize);
+        // Vertical clamp: keep inside middle band
+        const safeTop = viewportHeight * SAFE_TOP_RATIO;
+        const safeBottom = viewportHeight * SAFE_BOTTOM_RATIO;
+        const bandHeight = Math.max(0, safeBottom - safeTop - targetSize);
+        const y = safeTop + Math.random() * bandHeight;
 
-                    const targetX = Math.random() * maxX;
-                    const targetY = Math.random() * maxY;
+        return { x, y };
+    }
 
-                    focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
-                };
+        // Initial position
+        let { x: targetX, y: targetY } = getRandomPosition();
+        focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
 
-                // Initial placement
-                moveTarget();
+        // Move target every second, always inside the band
+        focusTimer = setInterval(() => {
+            ({ x: targetX, y: targetY } = getRandomPosition());
+            focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        }, 1000);
 
-                // Move target periodically
-                focusTimer = setInterval(moveTarget, 1000);
+        // Track mouse/touch
+        const onFocusMove = (e) => {
+            if (!focusTarget) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = focusTarget.getBoundingClientRect();
 
-                // Track mouse/touch
-                const onFocusMove = (e) => {
-                    if (!focusTarget) return;
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    const rect = focusTarget.getBoundingClientRect();
-
-                    if (
-                        clientX >= rect.left && clientX <= rect.right &&
-                        clientY >= rect.top && clientY <= rect.bottom
-                    ) {
-                        focusTarget.classList.add('success');
-                        focusTimeElapsed += 100; // Increment time
-                        if (focusTimeElapsed >= FOCUS_CHALLENGE_DURATION) {
-                            // Success handled by timer logic
-                        }
-                    } else {
-                        focusTarget.classList.remove('success');
-                        focusTimeElapsed = 0; // Reset time
-                    }
-                };
-
-                window.addEventListener('mousemove', onFocusMove);
-                window.addEventListener('touchmove', onFocusMove, { passive: false });
-
-                // Store cleanup function
-                focusTarget.cleanup = () => {
-                    window.removeEventListener('mousemove', onFocusMove);
-                    window.removeEventListener('touchmove', onFocusMove);
-                };
+            if (
+                clientX >= rect.left && clientX <= rect.right &&
+                clientY >= rect.top && clientY <= rect.bottom
+            ) {
+                focusTarget.classList.add('success');
+                focusTimeElapsed += 100; // Increment time
+                if (focusTimeElapsed >= FOCUS_CHALLENGE_DURATION) {
+                    // Success handled by timer logic
+                }
+            } else {
+                focusTarget.classList.remove('success');
+                focusTimeElapsed = 0; // Reset time
             }
+        };
+
+        window.addEventListener('mousemove', onFocusMove);
+        window.addEventListener('touchmove', onFocusMove, { passive: false });
+
+        // Store cleanup function
+        focusTarget.cleanup = () => {
+            window.removeEventListener('mousemove', onFocusMove);
+            window.removeEventListener('touchmove', onFocusMove);
+        };
+    }
+
+
 
                 function stopFocusChallenge(success) {
                 if (!focusTarget) return;
