@@ -74,14 +74,30 @@
   ></script>
 
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: "Inter", sans-serif;
-      transition: background-color 0.3s ease-out;
-      /* Prevents iOS/Android pull-to-refresh on scroll */
-      overscroll-behavior-y: contain;
-    }
+    html {
+  /* Make the root element fill the device viewport */
+  width: 100vw;
+  height: 100dvh; /* dynamic viewport: better for mobile browser UI */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  /* Hard-clamp the app to the visible phone screen */
+  width: 100vw;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
+
+  overflow: hidden; /* no scrolling / no extra space */
+
+  font-family: "Inter", sans-serif;
+  transition: background-color 0.3s ease-out;
+
+  /* Prevents iOS/Android pull-to-refresh on scroll */
+  overscroll-behavior-y: contain;
+}
     .canvas-container {
       position: absolute;
       top: 0;
@@ -1090,6 +1106,7 @@
                 let strokeIdCounter = 0;
                 let isHealMode = false;
                 let strokesSinceLastPrompt = 0;
+                let healStrokeCountThisSession = 0; // NEW: count heal strokes per session
                 let isReliefActive = false;
                 let reliefMLDrained = 0;
                 let isChallengeActive = false;
@@ -2489,22 +2506,21 @@ function updateLanguage(lang) {
                     console.log("Saving data to Firebase...");
 
                     try {
-                        const docRef = getDocRef();
-                        // Remove complex/transient objects before saving
                         const stateToSave = {
-                            currentML: appState.currentML,
-                            cuts: appState.cuts,
-                            healLines: appState.healLines,
-                            history: appState.history.map(h => ({ id: h.id, type: h.type })),
-                            mlHistory: appState.mlHistory,
-                            userAffirmations: appState.userAffirmations,
-                            settings: appState.settings,
-                            hasWelcomed: appState.hasWelcomed,
-                            hasHealedOnce: appState.hasHealedOnce,
-                            // NEW STREAK DATA
-                            lastActivityDay: appState.lastActivityDay,
-                            currentStreak: appState.currentStreak
-                        };
+                currentML: appState.currentML,
+                cuts: appState.cuts,
+                healLines: appState.healLines,
+                history: appState.history.map(h => ({ id: h.id, type: h.type })),
+                mlHistory: appState.mlHistory,
+                userAffirmations: appState.userAffirmations,
+                settings: appState.settings,
+                hasWelcomed: appState.hasWelcomed,
+                // 👇 do NOT persist hasHealedOnce anymore
+                // hasHealedOnce: appState.hasHealedOnce,
+                // NEW STREAK DATA
+                lastActivityDay: appState.lastActivityDay,
+                currentStreak: appState.currentStreak
+            };
                         await setDoc(docRef, stateToSave, { merge: true });
                         console.log("Data saved successfully.");
                     } catch (error) {
@@ -2525,6 +2541,8 @@ function updateLanguage(lang) {
                     // Apply all settings from appState
                     isHealMode = false; // Always reset mode on load
                     strokesSinceLastPrompt = 0;
+                    healStrokeCountThisSession = 0; // NEW: reset per session
+                    appState.hasHealedOnce = false; // NEW: allow the heal message once every session
 
                     // Restore settings
                     languageSelector.value = appState.settings.language;
@@ -3291,16 +3309,12 @@ function updateLanguage(lang) {
 
             return newKey;
         }
-            // Pick and remember the challenge
-            currentChallengeKey = SENSORY_CHALLENGES[Math.floor(Math.random() * SENSORY_CHALLENGES.length)];
+            // Always start with the focus challenge first
+            currentChallengeKey = 'focus_challenge';
+            const isFocus = true;
 
-            const isFocus = currentChallengeKey === 'focus_challenge';
-
-            if (isFocus) {
-              challengeTaskEl.textContent = getTranslation('challengeFocus');
-            } else {
-              challengeTaskEl.textContent = getTranslation(currentChallengeKey);
-            }
+// Focus challenge uses its special translation key
+challengeTaskEl.textContent = getTranslation('challengeFocus');
 
     completeChallengeButton.disabled = true;
     completeChallengeButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -3349,79 +3363,76 @@ function updateLanguage(lang) {
     }
 
     function startChallengeWithPrep(isFocus) {
-        // Stop any previous prep
-        cancelChallengePrep();
+    // Stop any previous prep
+    cancelChallengePrep();
 
-        // Get user-configured prep seconds (fallback to constant)
-        const prepSeconds = (
-            appState &&
-            appState.settings &&
-            typeof appState.settings.challengePrepSeconds === 'number'
-        )
-            ? appState.settings.challengePrepSeconds
-            : CHALLENGE_PREP_SECONDS;
+    // Get user-configured prep seconds (fallback to constant)
+    const prepSeconds = (
+        appState &&
+        appState.settings &&
+        typeof appState.settings.challengePrepSeconds === 'number'
+    )
+        ? appState.settings.challengePrepSeconds
+        : CHALLENGE_PREP_SECONDS;
 
-        // If user set 0s, skip the prep popup entirely and start immediately
-        if (prepSeconds <= 0) {
-            if (isFocus) {
-                // Moving target challenge
-                startFocusChallenge();
-                startChallengeTimer(FOCUS_CHALLENGE_DURATION / 1000);
-            } else {
-                // Normal text-based challenge
-                startChallengeTimer(CHALLENGE_TIME_SECONDS);
-            }
-            return;
-        }
+    // 🔹 NEW: Focus challenge ALWAYS starts immediately, ignoring prep setting
+    if (isFocus) {
+        // Moving target challenge
+        startFocusChallenge();
+        startChallengeTimer(FOCUS_CHALLENGE_DURATION / 1000);
+        return;
+    }
 
-        // 🔹 Copy the challenge text into the prep popup
-        if (challengePrepTaskEl && challengeTaskEl) {
-            challengePrepTaskEl.textContent = challengeTaskEl.textContent;
-        }
+    // If user set 0s, skip the prep popup entirely for non-focus challenges
+    if (prepSeconds <= 0) {
+        // Normal text-based challenge
+        startChallengeTimer(CHALLENGE_TIME_SECONDS);
+        return;
+    }
 
-        // Set up countdown in popup
-        let timeLeft = prepSeconds;
-        if (challengePrepCountdownEl) {
+    // 🔹 Copy the challenge text into the prep popup
+    if (challengePrepTaskEl && challengeTaskEl) {
+        challengePrepTaskEl.textContent = challengeTaskEl.textContent;
+    }
+
+    // Set up countdown in popup
+    let timeLeft = prepSeconds;
+    if (challengePrepCountdownEl) {
+        challengePrepCountdownEl.textContent = timeLeft;
+    }
+
+    if (challengePrepModal) {
+        // Show modal
+        challengePrepModal.classList.remove('hidden');
+
+        // Force a reflow so the opacity transition works
+        void challengePrepModal.offsetWidth;
+
+        // Fade in
+        challengePrepModal.classList.remove('opacity-0');
+        challengePrepModal.classList.add('opacity-100');
+    }
+
+    // Update the countdown each second
+    challengePrepCountdownTimer = setInterval(() => {
+        timeLeft--;
+        if (challengePrepCountdownEl && timeLeft >= 0) {
             challengePrepCountdownEl.textContent = timeLeft;
         }
-
-        if (challengePrepModal) {
-            // Show modal
-            challengePrepModal.classList.remove('hidden');
-
-            // Force a reflow so the opacity transition works
-            void challengePrepModal.offsetWidth;
-
-            // Fade in
-            challengePrepModal.classList.remove('opacity-0');
-            challengePrepModal.classList.add('opacity-100');
+        if (timeLeft <= 0) {
+            clearInterval(challengePrepCountdownTimer);
         }
+    }, 1000);
 
-        // Update the countdown each second
-        challengePrepCountdownTimer = setInterval(() => {
-            timeLeft--;
-            if (challengePrepCountdownEl && timeLeft >= 0) {
-                challengePrepCountdownEl.textContent = timeLeft;
-            }
-            if (timeLeft <= 0) {
-                clearInterval(challengePrepCountdownTimer);
-            }
-        }, 1000);
+    // After prepSeconds, hide popup and start the REAL challenge timer
+    challengePrepTimer = setTimeout(() => {
+        cancelChallengePrep();
 
-        // After prepSeconds, hide popup and start the REAL challenge timer
-        challengePrepTimer = setTimeout(() => {
-            cancelChallengePrep();
+        // Here it's always a non-focus challenge (focus already returned above)
+        startChallengeTimer(CHALLENGE_TIME_SECONDS);
+    }, prepSeconds * 1000);
+}
 
-            if (isFocus) {
-                // Moving target challenge
-                startFocusChallenge();
-                startChallengeTimer(FOCUS_CHALLENGE_DURATION / 1000);
-            } else {
-                // Normal text-based challenge
-                startChallengeTimer(CHALLENGE_TIME_SECONDS);
-            }
-        }, prepSeconds * 1000);
-    }
 
 
                 function completeChallenge() {
@@ -3847,6 +3858,12 @@ function updateLanguage(lang) {
                     if (isHealMode) {
                         // --- HEAL MODE LOGIC ---
                         playSound('heal');
+                        // NEW: count heal strokes and show message after 2 strokes (anywhere)
+                        healStrokeCountThisSession += 1;
+                        if (!appState.hasHealedOnce && healStrokeCountThisSession >= 4) {
+                            showNotification('heal', 7000);
+                            appState.hasHealedOnce = true;
+                        }
                         const newHeal = {
                             id: strokeIdCounter,
                             type: 'heal',
