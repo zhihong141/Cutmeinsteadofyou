@@ -3475,7 +3475,9 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
         }
 
         // Remove the circle from the page
-        document.body.removeChild(focusTarget);
+        if (focusTarget.parentNode) {
+            focusTarget.parentNode.removeChild(focusTarget);
+        }
         focusTarget = null;
     }
 
@@ -3540,68 +3542,91 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
             }
 
                 function startFocusChallenge() {
-                    if (focusTarget) return; // Already running
-                    focusTarget = document.createElement('div');
-                    focusTarget.id = 'focusTarget';
-                    document.body.appendChild(focusTarget);
+                if (focusTarget) return; // Already running
 
-                    focusTimeElapsed = 0;
-                    let targetX = Math.random() * (window.innerWidth - 60);
-                    let targetY = Math.random() * (window.innerHeight - 60);
-                    focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
+                // Use the challenge modal as the playground, fallback to body
+                const container = document.getElementById('sensoryChallengeModal') || document.body;
 
-                    // Move target periodically
-                    focusTimer = setInterval(() => {
-                        targetX = Math.random() * (window.innerWidth - 60);
-                        targetY = Math.random() * (window.innerHeight - 60);
-                        focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
-                    }, 1000);
+                focusTarget = document.createElement('div');
+                focusTarget.id = 'focusTarget';
+                container.appendChild(focusTarget);
 
-                    // Track mouse/touch
-                    const onFocusMove = (e) => {
-                        if (!focusTarget) return;
-                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                        const rect = focusTarget.getBoundingClientRect();
+                focusTimeElapsed = 0;
 
-                        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
-                            focusTarget.classList.add('success');
-                            focusTimeElapsed += 100; // Increment time
-                            if (focusTimeElapsed >= FOCUS_CHALLENGE_DURATION) {
-                                // Success handled by timer logic
-                            }
-                        } else {
-                            focusTarget.classList.remove('success');
-                            focusTimeElapsed = 0; // Reset time
-                        }
-                    };
-
-                    window.addEventListener('mousemove', onFocusMove);
-                    window.addEventListener('touchmove', onFocusMove, { passive: false });
-
-                    // Store cleanup function
-                    focusTarget.cleanup = () => {
-                        window.removeEventListener('mousemove', onFocusMove);
-                        window.removeEventListener('touchmove', onFocusMove);
-                    };
-                }
-
-                function stopFocusChallenge(success) {
+                const moveTarget = () => {
                     if (!focusTarget) return;
 
-                    clearInterval(challengeTimerInterval);
-                    clearInterval(focusTimer);
-                    focusTarget.cleanup(); // Remove event listeners
-                    document.body.removeChild(focusTarget);
-                    focusTarget = null; // CRITICAL: Reset the variable
+                    const bounds = container.getBoundingClientRect();
+                    const targetSize = 80; // matches #focusTarget width/height in CSS
 
-                    if (success) {
-                        appState.currentML -= ML_REDUCTION_PER_CHALLENGE;
-                        logMLChange('challenge', -ML_REDUCTION_PER_CHALLENGE, 'Focus Challenge Complete');
-                        updateMeterDisplay();
+                    const maxX = Math.max(0, bounds.width - targetSize);
+                    const maxY = Math.max(0, bounds.height - targetSize);
+
+                    const targetX = Math.random() * maxX;
+                    const targetY = Math.random() * maxY;
+
+                    focusTarget.style.transform = `translate(${targetX}px, ${targetY}px)`;
+                };
+
+                // Initial placement
+                moveTarget();
+
+                // Move target periodically
+                focusTimer = setInterval(moveTarget, 1000);
+
+                // Track mouse/touch
+                const onFocusMove = (e) => {
+                    if (!focusTarget) return;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const rect = focusTarget.getBoundingClientRect();
+
+                    if (
+                        clientX >= rect.left && clientX <= rect.right &&
+                        clientY >= rect.top && clientY <= rect.bottom
+                    ) {
+                        focusTarget.classList.add('success');
+                        focusTimeElapsed += 100; // Increment time
+                        if (focusTimeElapsed >= FOCUS_CHALLENGE_DURATION) {
+                            // Success handled by timer logic
+                        }
+                    } else {
+                        focusTarget.classList.remove('success');
+                        focusTimeElapsed = 0; // Reset time
+                    }
+                };
+
+                window.addEventListener('mousemove', onFocusMove);
+                window.addEventListener('touchmove', onFocusMove, { passive: false });
+
+                // Store cleanup function
+                focusTarget.cleanup = () => {
+                    window.removeEventListener('mousemove', onFocusMove);
+                    window.removeEventListener('touchmove', onFocusMove);
+                };
+            }
+
+                function stopFocusChallenge(success) {
+                if (!focusTarget) return;
+
+                clearInterval(challengeTimerInterval);
+                clearInterval(focusTimer);
+
+                if (focusTarget.cleanup) {
+                    focusTarget.cleanup(); // Remove event listeners
+                }
+                if (focusTarget.parentNode) {
+                    focusTarget.parentNode.removeChild(focusTarget);
+                }
+                focusTarget = null; // CRITICAL: Reset the variable
+
+                if (success) {
+                    appState.currentML -= ML_REDUCTION_PER_CHALLENGE;
+                    logMLChange('challenge', -ML_REDUCTION_PER_CHALLENGE, 'Focus Challenge Complete');
+                    updateMeterDisplay();
                     // ✅ Grounding after a successful focus challenge
-            showGroundingModal();
-        }
+                    showGroundingModal();
+                }
 
                     sensoryChallengeModal.classList.add('hidden');
                     isChallengeActive = false;
