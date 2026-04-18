@@ -781,23 +781,24 @@
                         <p id="challengePrepTask" class="text-sm text-gray-900 font-medium">
                             <!-- This will be filled with the challenge text via JS -->
                         </p>
-                        <p class="text-sm text-gray-700" data-lang="challengePrepBody">
-                            Your challenge will start in
-                            <span id="challengePrepCountdown" class="font-semibold">30</span>
-                            seconds. Take a breath and get into position.
+                        <p id="challengePrepBodyText" class="text-sm text-gray-700">
+                            <!-- This will be filled with the translated text with countdown via JS -->
                         </p>
                          <!-- Optional: direct cancel from prep -->
                 <button id="challengePrepCancelButton"
-                        class="w-full py-2 rounded-lg border border-red-500 text-red-600 font-semibold hover:bg-red-50">
+                        class="w-full py-2 rounded-lg border border-red-500 text-red-600 font-semibold hover:bg-red-50"
+                        data-lang="challengePrepCancel">
                     Cancel challenge (I need something else)
                 </button>
                         <button id="challengePrepChangeButton"
-                        class="hidden w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow border-b-4 border-indigo-900 transition-all">
+                        class="hidden w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow border-b-4 border-indigo-900 transition-all"
+                        data-lang="challengePrepChange">
                     Change challenge
                 </button>
 
                 <button id="challengePrepStartButton"
-                        class="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-extrabold rounded-lg shadow border-b-4 border-yellow-700 transition-all">
+                        class="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-extrabold rounded-lg shadow border-b-4 border-yellow-700 transition-all"
+                        data-lang="challengePrepStart">
                     Start now
                 </button>
                     </div>
@@ -1220,11 +1221,21 @@
                 const anotherChallengeButton = document.getElementById('anotherChallengeButton');
                 // 30s pre-challenge popup
                 const challengePrepModal = document.getElementById('challengePrepModal');
-                const challengePrepCountdownEl = document.getElementById('challengePrepCountdown');
+                const challengePrepBodyText = document.getElementById('challengePrepBodyText');
                 const challengePrepTaskEl = document.getElementById('challengePrepTask');
                 let challengePrepTimer = null;
                 let challengePrepCountdownTimer = null;
                 const CHALLENGE_PREP_SECONDS = 30;
+                
+                // Helper function to update the prep body text with the countdown
+                function updateChallengePrepBodyText(seconds) {
+                    if (!challengePrepBodyText) return;
+                    const lang = appState?.settings?.language || 'en';
+                    const template = getTranslation('challengePrepBody');
+                    const text = template.replace('{seconds}', `<span class="font-semibold">${seconds}</span>`);
+                    challengePrepBodyText.innerHTML = text;
+                }
+                
                 const challengePrepSkipButton = document.getElementById('challengePrepSkipButton');
                 const challengePrepCancelButton = document.getElementById('challengePrepCancelButton');
                 const challengePrepStartButton = document.getElementById('challengePrepStartButton');
@@ -1408,6 +1419,15 @@
                         challengeMarching: "March with high knees for 1 minute. Tap opposite hand to opposite knee and cross your body’s center each step.",
                         challengeComplete: "Complete Challenge (Wait for timer)", challengeCancel: "Cancel (I need immediate help)", challengeFocus: "Keep your finger inside the moving target for 15 seconds.",
                         anotherChallenge: "This one doesn’t fit right now…",
+                        challengePrepTitle: "Get Ready",
+                        challengePrepBody: "Your challenge will start in {seconds} seconds. Take a breath and get into position.",
+                        challengePrepCancel: "Cancel challenge (I need something else)",
+                        challengePrepChange: "Change challenge",
+                        challengePrepStart: "Start now",
+                        encouragement1: "This moment is just one part of your journey, and it's okay if today feels heavy. Just try to focus on taking the next small, gentle step forward. Your strength isn't about getting through everything perfectly, but about continuing to show up for yourself, even when it's hard. You've got this.",
+                        encouragement2: "Please remember that you are worthy of kindness and support, especially from yourself. The feelings you have are valid, but they don't define your entire future. There are people who care deeply about you and want to help carry this weight. Reach out—connection is always available.",
+                        encouragement3: "The most difficult feelings are temporary, even if they feel overwhelming right now. You are resilient, and there is light waiting for you just beyond this moment. Give yourself permission to pause, breathe, and simply wait for the intensity to pass. Hold on just a little longer.",
+                        encouragement4: "A setback isn't a failure, it's just a reminder that you're human. Be gentle with yourself today. Focus on tiny victories: a glass of water, a deep breath, or a moment of quiet. You are doing the best you can with what you have, and that is more than enough.",
                         logTitle: "Activity Log", logAddNote: "Add Note", logTime: "Time", logAction: "Action", logChange: "ML Change",
                         logExportTitle: "Export Session", logExportPDF: "Save as PDF Report", logExportCSV: "Save as CSV Data", logExportEmail: "Email to Professional",
                         logExportCopy: "Copy Session Summary", logSummaryAccumulation: "Accumulation (Drips):", logSummaryRelief: "Relief (Breaths/Challenges/Undos):",
@@ -1497,6 +1517,15 @@
                         challengeMarching: "Berjalan tempat dengan lutut diangkat tinggi selama 1 minit. Tepuk tangan bertentangan ke lutut bertentangan untuk setiap langkah.",
                         challengeComplete: "Selesai Cabaran (Tunggu pemasa)", challengeCancel: "Batal (Saya perlukan bantuan segera)", challengeFocus: "Kekalkan jari anda di dalam sasaran bergerak selama 15 saat.",
                         anotherChallenge: "Yang ini kurang sesuai buat masa ini…",
+                        challengePrepTitle: "Bersiap Sedia",
+                        challengePrepBody: "Cabaran anda akan bermula dalam {seconds} saat. Tarik nafas dan bersiap sedia.",
+                        challengePrepCancel: "Batal cabaran (Saya perlukan sesuatu yang lain)",
+                        challengePrepChange: "Tukar cabaran",
+                        challengePrepStart: "Mula sekarang",
+                        encouragement1: "Detik ini hanyalah sebahagian daripada perjalanan anda, dan tidak mengapa jika hari ini terasa berat. Cuba fokus pada langkah kecil dan lembut yang seterusnya. Kekuatan anda bukan tentang melalui segala-galanya dengan sempurna, tetapi tentang terus hadir untuk diri sendiri, walaupun sukar. Anda boleh lakukan ini.",
+                        encouragement2: "Sila ingat bahawa anda layak menerima kebaikan dan sokongan, terutamanya dari diri sendiri. Perasaan yang anda alami adalah sah, tetapi ia tidak menentukan keseluruhan masa depan anda. Ada orang yang sangat mengambil berat tentang anda dan mahu membantu meringankan beban ini. Hubungi mereka—sokongan sentiasa ada.",
+                        encouragement3: "Perasaan yang paling sukar adalah sementara, walaupun ia terasa sangat berat sekarang. Anda berdaya tahan, dan ada cahaya menanti anda di sebalik detik ini. Beri diri anda kebenaran untuk berhenti seketika, bernafas, dan tunggu sehingga kekuatan itu berlalu. Bertahan sedikit lagi.",
+                        encouragement4: "Kegagalan bukanlah kesilapan, ia hanya peringatan bahawa anda manusia biasa. Bersikap lembut pada diri sendiri hari ini. Fokus pada kemenangan kecil: segelas air, nafas dalam, atau saat ketenangan. Anda melakukan yang terbaik dengan apa yang ada, dan itu sudah lebih daripada cukup.",
                         logTitle: "Log Aktiviti", logAddNote: "Tambah Nota", logTime: "Masa", logAction: "Tindakan", logChange: "Perubahan BM",
                         logExportTitle: "Eksport Sesi", logExportPDF: "Simpan sebagai Laporan PDF", logExportCSV: "Simpan sebagai Data CSV", logExportEmail: "E-mel kepada Profesional",
                         logExportCopy: "Salin Ringkasan Sesi", logSummaryAccumulation: "Pengumpulan (Titisan):", logSummaryRelief: "Kelegaan (Nafas/Cabaran/Buat Asal):",
@@ -1587,6 +1616,15 @@
                         challengeMarching: "原地高抬腿走路 1 分钟，每一步用相反的手触碰相反的膝盖，让身体交叉摆动。",
                         challengeComplete: "完成挑战（等待计时器）", challengeCancel: "取消（我需要立即帮助）", challengeFocus: "将您的手指保持在移动目标内 15 秒。",
                         anotherChallenge: "这个暂时不太合适……",
+                        challengePrepTitle: "准备好",
+                        challengePrepBody: "您的挑战将在 {seconds} 秒后开始。深吸一口气并做好准备。",
+                        challengePrepCancel: "取消挑战（我需要其他帮助）",
+                        challengePrepChange: "更换挑战",
+                        challengePrepStart: "立即开始",
+                        encouragement1: "此刻只是你人生旅程的一部分，如果今天感觉沉重，那也没关系。只需试着专注于迈出下一个温柔的小步。你的力量不在于完美地度过一切，而在于即使在艰难时刻也继续为自己出现。你可以做到的。",
+                        encouragement2: "请记住，你值得善待和支持，尤其是来自自己的。你的感受是真实有效的，但它们不会定义你的整个未来。有人深切关心你，想帮助你分担这份重量。伸出手——支持永远存在。",
+                        encouragement3: "最困难的感受是暂时的，即使现在感觉势不可挡。你是有韧性的，就在此刻之外有光明在等着你。允许自己暂停、呼吸，等待强烈情绪过去。再坚持一会儿。",
+                        encouragement4: "挫折不是失败，它只是提醒你，你是人类。今天对自己温柔一些。专注于微小的胜利：一杯水、一次深呼吸，或片刻的安静。你正在用你所拥有的做到最好，这已经足够了。",
                         logTitle: "活动日志", logAddNote: "添加备注", logTime: "时间", logAction: "操作", logChange: "精神负荷变化",
                         logExportTitle: "导出会话", logExportPDF: "另存为 PDF 报告", logExportCSV: "另存为 CSV 数据", logExportEmail: "发送给专业人士",
                         logExportCopy: "复制会话摘要", logSummaryAccumulation: "积累（滴落）：", logSummaryRelief: "缓解（呼吸/挑战/撤销）：",
@@ -1677,6 +1715,15 @@
                         challengeMarching: "1 நிமிடம் இடத்தில் உயரமாக முழங்காலை தூக்கி நடைபோடுங்கள். ஒவ்வொரு அடியிலும் எதிர் கையை எதிர் முழங்காலுடன் மெதுவாகத் தொடுங்கள்.",
                         challengeComplete: "சவாலை முடிக்கவும் (டைமருக்காகக் காத்திருக்கவும்)", challengeCancel: "ரத்துசெய் (எனக்கு உடனடி உதவி தேவை)", challengeFocus: "உங்கள் விரலை நகரும் இலக்கின் உள்ளே 15 வினாடிகள் வைத்திருக்கவும்.",
                         anotherChallenge: "இது இப்போது பொருந்தவில்லை…",
+                        challengePrepTitle: "தயாராகுங்கள்",
+                        challengePrepBody: "உங்கள் சவால் {seconds} விநாடிகளில் தொடங்கும். மூச்சு விட்டு நிலையை எடுக்கவும்.",
+                        challengePrepCancel: "சவாலை ரத்துசெய் (எனக்கு வேறு உதவி தேவை)",
+                        challengePrepChange: "சவாலை மாற்றவும்",
+                        challengePrepStart: "இப்போது தொடங்கு",
+                        encouragement1: "இந்த தருணம் உங்கள் பயணத்தின் ஒரு பகுதி மட்டுமே, இன்று கனமாக உணர்ந்தால் அது சரி. அடுத்த சிறிய, மென்மையான படியில் கவனம் செலுத்த முயற்சிக்கவும். உங்கள் வலிமை எல்லாவற்றையும் சரியாகச் செய்வது அல்ல, ஆனால் கடினமாக இருக்கும்போதும் உங்களுக்காக தொடர்ந்து முன்வருவது. நீங்கள் இதைச் செய்யலாம்.",
+                        encouragement2: "தயவுசெய்து நினைவில் கொள்ளுங்கள், நீங்கள் இரக்கத்திற்கும் ஆதரவுக்கும் தகுதியானவர், குறிப்பாக உங்களிடமிருந்து. உங்கள் உணர்வுகள் சரியானவை, ஆனால் அவை உங்கள் எதிர்காலத்தை முழுவதுமாக வரையறுக்காது. உங்களைப் பற்றி ஆழமாக அக்கறை கொண்டவர்கள் உள்ளனர், இந்த பாரத்தை சுமக்க உதவ விரும்புகிறார்கள். தொடர்பு கொள்ளுங்கள்—ஆதரவு எப்போதும் கிடைக்கும்.",
+                        encouragement3: "மிகவும் கடினமான உணர்வுகள் தற்காலிகமானவை, இப்போது மிகவும் பெரியதாகத் தோன்றினாலும் கூட. நீங்கள் உறுதியானவர், இந்த தருணத்திற்கு அப்பால் ஒளி காத்திருக்கிறது. இடைநிறுத்த, மூச்சுவிட, தீவிரம் கடந்து செல்லும் வரை காத்திருக்க உங்களுக்கு அனுமதி கொடுங்கள். இன்னும் சிறிது நேரம் பிடித்துக் கொள்ளுங்கள்.",
+                        encouragement4: "பின்னடைவு தோல்வி அல்ல, அது நீங்கள் ஒரு மனிதர் என்பதை நினைவூட்டுவது மட்டுமே. இன்று உங்களுடன் மென்மையாக இருங்கள். சிறிய வெற்றிகளில் கவனம் செலுத்துங்கள்: ஒரு தம்ளர் தண்ணீர், ஒரு ஆழ்ந்த மூச்சு, அல்லது அமைதியான ஒரு கணம். நீங்கள் உங்களிடம் உள்ளவற்றில் சிறந்ததைச் செய்து கொண்டிருக்கிறீர்கள், அது போதுமானதுக்கு மேல்.",
                         logTitle: "செயல்பாட்டு பதிவு", logAddNote: "குறிப்பு சேர்", logTime: "நேரம்", logAction: "செயல்", logChange: "மன சுமை மாற்றம்",
                         logExportTitle: "அமர்வை ஏற்றுமதி செய்",
                         logExportPDF: "PDF அறிக்கையாகச் சேமி",
@@ -1723,12 +1770,15 @@
                 };
 
                 // === Encouraging Messages & Challenges (kept from original) ===
-                const encouragingMessages = [
-                    "This moment is just one part of your journey, and it's okay if today feels heavy. Just try to focus on taking the next small, gentle step forward. Your strength isn't about getting through everything perfectly, but about continuing to show up for yourself, even when it's hard. You've got this.",
-                    "Please remember that you are worthy of kindness and support, especially from yourself. The feelings you have are valid, but they don't define your entire future. There are people who care deeply about you and want to help carry this weight. Reach out—connection is always available.",
-                    "The most difficult feelings are temporary, even if they feel overwhelming right now. You are resilient, and is light waiting for you just beyond this moment. Give yourself permission to pause, breathe, and simply wait for the intensity to pass. Hold on just a little longer.",
-                    "A setback isn't a failure, it's just a reminder that you're human. Be gentle with yourself today. Focus on tiny victories: a glass of water, a deep breath, or a moment of quiet. You are doing the best you can with what you have, and that is more than enough."
-                ];
+                // Get encouraging messages from translations
+                function getEncouragingMessages() {
+                    return [
+                        getTranslation('encouragement1'),
+                        getTranslation('encouragement2'),
+                        getTranslation('encouragement3'),
+                        getTranslation('encouragement4')
+                    ];
+                }
                 const SENSORY_CHALLENGES = [
                   "challengeIceCubes",
                   "challengeColdSplash",
@@ -1859,6 +1909,16 @@ function updateLanguage(lang) {
     updateLogModal();
   }
   if (typeof updateAffirmationsList === 'function') updateAffirmationsList();
+  
+  // Update challenge prep body text if modal is visible
+  if (typeof challengePrepModal !== 'undefined' && challengePrepModal && !challengePrepModal.classList.contains('hidden')) {
+    // Get the current countdown value if the timer is running
+    const countdownMatch = challengePrepBodyText?.innerHTML?.match(/>(\d+)</);
+    const currentCountdown = countdownMatch ? parseInt(countdownMatch[1]) : CHALLENGE_PREP_SECONDS;
+    if (typeof updateChallengePrepBodyText === 'function') {
+      updateChallengePrepBodyText(currentCountdown);
+    }
+  }
 }
 
 
@@ -3210,8 +3270,9 @@ function updateLanguage(lang) {
                         const randomIndex = Math.floor(Math.random() * appState.userAffirmations.length);
                         message = appState.userAffirmations[randomIndex];
                     } else {
-                        const randomIndex = Math.floor(Math.random() * encouragingMessages.length);
-                        message = encouragingMessages[randomIndex];
+                        const messages = getEncouragingMessages();
+                        const randomIndex = Math.floor(Math.random() * messages.length);
+                        message = messages[randomIndex];
                     }
 
                     randomEncouragementEl.textContent = message;
@@ -3253,14 +3314,14 @@ function updateLanguage(lang) {
         stopPrepCountdown();
         const seconds = Number(appState?.settings?.challengePrepSeconds ?? CHALLENGE_PREP_SECONDS);
         let remaining = Math.max(0, seconds);
-        challengePrepCountdownEl.textContent = remaining;
+        updateChallengePrepBodyText(remaining);
 
         // if user sets 0s in settings, allow immediate start
         if (remaining === 0) return;
 
         challengePrepCountdownTimer = setInterval(() => {
             remaining -= 1;
-            challengePrepCountdownEl.textContent = remaining;
+            updateChallengePrepBodyText(remaining);
             if (remaining <= 0) {
                 stopPrepCountdown();
                 // auto-start the challenge when countdown finishes
@@ -3408,9 +3469,7 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
 
     // Set up countdown in popup
     let timeLeft = prepSeconds;
-    if (challengePrepCountdownEl) {
-        challengePrepCountdownEl.textContent = timeLeft;
-    }
+    updateChallengePrepBodyText(timeLeft);
 
     if (challengePrepModal) {
         // Show modal
@@ -3427,8 +3486,8 @@ challengeTaskEl.textContent = getTranslation('challengeFocus');
     // Update the countdown each second
     challengePrepCountdownTimer = setInterval(() => {
         timeLeft--;
-        if (challengePrepCountdownEl && timeLeft >= 0) {
-            challengePrepCountdownEl.textContent = timeLeft;
+        if (timeLeft >= 0) {
+            updateChallengePrepBodyText(timeLeft);
         }
         if (timeLeft <= 0) {
             clearInterval(challengePrepCountdownTimer);
