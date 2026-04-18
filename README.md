@@ -7,4 +7,3 @@ A web-based tool to help user coping with anxiety and self harm
 
 
 ## Credits: Created by Seven.Four. [Visual Diary](https://linktr.ee/seven.four/)
-## For me to run
